@@ -19,7 +19,7 @@ FrameHook = Callable[[SO101], None]  # called every control tick (for video reco
 
 # IK rest posture: fingertips at (0.22, 0, 0.09) pointing straight down (solved offline).
 REST_Q = np.array([0.043, -0.097, 0.003, 1.658, -1.479])
-HOME_Q = np.array([0.0, -1.5, 1.4, 1.2, 0.0])  # folded, out of the camera's way
+HOME_Q = np.array([0.0, -1.7, 0.0, 0.0, 0.0])  # arm straight up: out of the overhead camera view
 
 # When a straight-down approach is out of reach, retry with the fingers tilted away from the
 # base by these angles (degrees). Tilting extends the reach at height.

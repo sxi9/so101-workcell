@@ -4,7 +4,7 @@
   <option timestep="0.002" integrator="implicitfast" cone="elliptic" impratio="10"/>
 
   <visual>
-    <headlight diffuse="0.7 0.7 0.7" ambient="0.35 0.35 0.35" specular="0.1 0.1 0.1"/>
+    <headlight diffuse="0.35 0.35 0.35" ambient="0.3 0.3 0.3" specular="0.05 0.05 0.05"/>
     <rgba haze="0.15 0.25 0.35 1"/>
     <global azimuth="150" elevation="-25" offwidth="1280" offheight="960"/>
     <quality shadowsize="4096"/>
@@ -33,11 +33,11 @@
   </default>
 
   <worldbody>
-    <light pos="0.3 0 1.5" dir="0 0 -1" directional="false" diffuse="0.8 0.8 0.8" castshadow="true"/>
+    <light pos="0.3 0 1.5" dir="0 0 -1" directional="false" diffuse="0.55 0.55 0.55" castshadow="true"/>
     <light pos="-0.5 0.5 1.0" dir="0.5 -0.5 -1" directional="true" diffuse="0.3 0.3 0.3" castshadow="false"/>
 
     <!-- The arm is bolted to the table surface; the table top is the z=0 plane. -->
-    <geom name="table" type="plane" size="0.6 0.5 0.05" material="table_mat" condim="4" friction="1.0 0.02 0.001"/>
+    <geom name="table" type="plane" size="1.0 0.8 0.05" material="table_mat" condim="4" friction="1.0 0.02 0.001"/>
 
     <!-- Cameras -->
     <camera name="overhead" pos="0.25 0 0.75" xyaxes="0 -1 0 1 0 0" fovy="55"/>
