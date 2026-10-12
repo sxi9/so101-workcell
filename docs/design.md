@@ -31,6 +31,15 @@ Measured with `scripts/measure_geometry.py` on the official SO-101 MJCF (new cal
    unstable under domain randomization; 0.01 s is used everywhere.
 7. **Control latency in the RL env.** A P-controller with gain 1 and a 1-step delay oscillates
    forever; the scripted oracle uses gain 0.5. Policies learn this themselves.
+8. **Reward hacking by dragging.** With only a tanh reach term the gradient far from the cube
+   is flat, and the first policy settled at a workspace corner, later learning to shove the cube
+   there. A linear `-4 * dist` term, a penalty on cube displacement while not grasped, and the
+   commanded target in the observation fixed it.
+9. **Critic divergence under randomisation.** One physics blow-up sent the cube flying, the
+   unbounded distance penalty produced a return of -2493, and the SAC critic loss grew to 1e21
+   with the entropy coefficient following. The env now ends an episode on non-finite state or
+   a cube off the table with a bounded penalty, clips per-step reward to +-12, and clips the
+   observation. The nominal policy then transferred to randomised physics at 90% zero-shot.
 
 ## Sim -> twin -> real
 

@@ -16,7 +16,7 @@ joint-command stream targeting a Cyberwave digital twin or the real arm.
 |---|---|---|---|
 | Simulation | `so101_workcell/sim` | Official SO-101 MJCF + fingertip pads, tabletop scene with cubes and bins, damped-least-squares IK, straight-line Cartesian moves, scripted pick/place skills that **verify** every step from simulator state | 90/90 pick-and-place on random layouts |
 | Agent | `so101_workcell/agent` | Overhead-camera colour detector (2 mm localisation), rule-based planner, Claude vision-language planner with a JSON-schema plan, executor with retries | end-to-end instruction following |
-| RL | `so101_workcell/rl` | Gymnasium grasp-and-lift env with domain randomisation (mass, size, friction, servo gain, gravity, control latency, noise), SAC training and evaluation | see Results |
+| RL | `so101_workcell/rl` | Gymnasium grasp-and-lift env with domain randomisation (mass, size, friction, servo gain, gravity, control latency, noise), SAC training and evaluation | 98% nominal, 90% randomised |
 | Backends | `so101_workcell/sim/backends.py` | Same 10 Hz joint-target stream to local MuJoCo, a Cyberwave twin (playground / cloud MuJoCo / live arm), or a dry-run logger | replay test passes |
 | Hub | `so101_workcell/hub` | LeRobot v3 dataset export of scripted demos, Hugging Face model/dataset upload with generated cards | export verified |
 
@@ -33,17 +33,28 @@ objects and bins; the skills own the geometry, close the loop on simulator state
 
 Failure modes fixed along the way are documented in [docs/design.md](docs/design.md).
 
-### Reinforcement learning (`scripts/train_rl.py`, SAC, 200k steps, 4 envs)
+### Reinforcement learning (`scripts/train_rl.py`, SAC)
 
-_Training in progress on the laptop GPU; numbers land here when the run finishes._
+<p align="center">
+  <img src="docs/rl_lift.gif" width="400" alt="SAC grasp-and-lift policy">
+</p>
+
+Policy trained on nominal physics for 150k steps (49 min on the RTX 3050), then evaluated
+zero-shot under domain randomisation (`scripts/eval_rl.py`, 50 episodes each, deterministic):
 
 | condition | episodes | lift success | grasp rate |
 |---|---|---|---|
-| nominal physics | 50 | TBD | TBD |
-| domain-randomised | 50 | TBD | TBD |
+| nominal physics | 50 | **98%** | 98% |
+| domain-randomised (mass, size, friction, servo gain, gravity, latency, noise) | 50 | **90%** | 90% |
 
-A scripted oracle acting through the same 4-D action interface succeeds 8/10 nominal and 7/10
-randomised episodes, which bounds what the policy should reach.
+Success rose from 0% to 68% between 96k and 112k steps and reached 98% by 144k. A scripted
+oracle acting through the same 4-D action interface manages 8/10 nominal and 7/10 randomised
+episodes, so the learned policy beats the hand-written controller.
+
+Two earlier runs failed and taught something: a policy that learned to drag the cube into a
+workspace corner (fixed with a linear reach term and a displacement penalty), and a randomised
+run whose critic diverged after one physics blow-up produced a return of -2493 (fixed with an
+instability guard and per-step reward clipping). Both are in [docs/design.md](docs/design.md).
 
 ## Quick start
 
@@ -67,9 +78,10 @@ python scripts/run_agent.py --instruction "sort the cubes: red left, the rest ri
 # success-rate evaluation over random layouts
 python scripts/eval_scripted.py --episodes 30
 
-# RL: train, evaluate, render
-python scripts/train_rl.py --steps 200000 --run lift_sac --n-envs 4
-python scripts/eval_rl.py --model runs/lift_sac/final.zip --episodes 50 --video outputs/rl_lift.mp4
+# RL: train on nominal physics, fine-tune under randomisation, evaluate, render
+python scripts/train_rl.py --steps 150000 --run lift_sac_nodr --n-envs 1 --no-dr
+python scripts/train_rl.py --steps 60000 --run lift_sac_dr_ft --init runs/lift_sac_nodr/final.zip
+python scripts/eval_rl.py --model runs/lift_sac_nodr/final.zip --episodes 50 --video outputs/rl_lift.mp4
 
 # stream a planned episode to a Cyberwave SO-101 twin (free Playground; needs CYBERWAVE_API_KEY)
 python scripts/replay_to_cyberwave.py --backend playground

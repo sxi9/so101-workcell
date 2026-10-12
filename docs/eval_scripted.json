@@ -1,0 +1,642 @@
+{
+  "summary": {
+    "episodes": 30,
+    "attempts": 90,
+    "success": 90,
+    "rate": 1.0,
+    "failures": {},
+    "wall_s": 29.919459342956543
+  },
+  "rows": [
+    {
+      "seed": 100,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 100,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 100,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 101,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 101,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 101,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 102,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 102,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 102,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 103,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 103,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 103,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 104,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 104,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 104,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 105,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 105,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 105,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 106,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 106,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 106,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 107,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 107,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 107,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 108,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 108,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 108,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 109,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 109,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 109,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 110,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 110,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 110,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 111,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 111,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 111,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 112,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 112,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 112,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 113,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 113,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 113,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 114,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 114,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 114,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 115,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 115,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 115,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 116,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 116,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 116,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 117,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 117,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 117,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 118,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 118,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 118,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 119,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 119,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 119,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 120,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 120,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 120,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 121,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 121,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 121,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 122,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 122,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 122,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 123,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 123,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 123,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 124,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 124,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 124,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 125,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 125,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 125,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 126,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 126,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 126,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 127,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 127,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 127,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 128,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 128,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 128,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 129,
+      "cube": "cube_red",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 129,
+      "cube": "cube_green",
+      "bin": "bin_right",
+      "ok": true,
+      "reason": "in bin"
+    },
+    {
+      "seed": 129,
+      "cube": "cube_blue",
+      "bin": "bin_left",
+      "ok": true,
+      "reason": "in bin"
+    }
+  ]
+}

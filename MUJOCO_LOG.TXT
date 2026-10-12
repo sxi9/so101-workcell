@@ -40,3 +40,5 @@ WARNING Mon Oct 12 21:41:39 2026: Nan, Inf or huge value in QACC at DOF 9. The s
 
 WARNING Mon Oct 12 21:41:59 2026: Nan, Inf or huge value in QACC at DOF 9. The simulation is unstable. Time = 0.8960.
 
+WARNING Mon Oct 12 22:34:07 2026: Nan, Inf or huge value in QVEL at DOF 6. The simulation is unstable. Time = 1.2740.
+
