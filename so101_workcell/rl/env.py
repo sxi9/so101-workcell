@@ -3,9 +3,9 @@
 Action (4,): Cartesian fingertip delta (dx, dy, dz) in [-1, 1] scaled to ACTION_SCALE metres,
             plus a gripper command in [-1, 1] (-1 open, +1 close). Fingers stay pointing down;
             an IK solve converts the Cartesian target to joint targets each control step.
-Observation (23,): arm joint positions (5), arm joint velocities (5), gripper opening (1),
+Observation (26,): arm joint positions (5), arm joint velocities (5), gripper opening (1),
             fingertip position (3), cube position (3), cube - fingertip (3),
-            cube z-velocity (1), previous action (2: dz, gripper).
+            cube z-velocity (1), previous action (2: dz, gripper), commanded target - fingertip (3).
 Reward: dense shaping toward the cube, a grasp bonus when the cube sits between the pads with
             the gripper closed, lift reward proportional to cube height, success bonus.
 Episode: 100 control steps at 10 Hz. Success = cube lifted above LIFT_SUCCESS metres.
@@ -26,7 +26,7 @@ from gymnasium import spaces
 from so101_workcell.sim.ik import solve_ik
 from so101_workcell.sim.robot import SO101
 from so101_workcell.sim.scene import CUBE_SIZE, SPAWN_X, SPAWN_Y
-from so101_workcell.sim.skills import GRASP_HEIGHT_OFFSET, PAD_FACE_OFFSET, REST_Q
+from so101_workcell.sim.skills import GRASP_CLEARANCE, GRASP_HEIGHT_OFFSET, PAD_FACE_OFFSET, REST_Q
 
 CUBE = "cube_red"
 PARKED = {"cube_green": (-0.25, 0.25), "cube_blue": (-0.25, -0.25)}  # out of the way
@@ -36,7 +36,7 @@ ACTION_SCALE = np.array([0.02, 0.02, 0.02])  # metres per step at |a| = 1
 LIFT_SUCCESS = 0.06
 MAX_STEPS = 100
 WORKSPACE_LO = np.array([0.10, -0.14, 0.012])
-WORKSPACE_HI = np.array([0.28, 0.14, 0.16])
+WORKSPACE_HI = np.array([0.28, 0.14, 0.10])  # fingers-down poses above ~10 cm are out of reach
 
 
 @dataclass
@@ -86,7 +86,7 @@ class SO101LiftEnv(gym.Env):
         self._pad_geoms = [m.geom("pad_fixed").id, m.geom("pad_moving").id]
         self._table_geom = m.geom("table").id
         self.action_space = spaces.Box(-1.0, 1.0, shape=(4,), dtype=np.float32)
-        self.observation_space = spaces.Box(-np.inf, np.inf, shape=(23,), dtype=np.float32)
+        self.observation_space = spaces.Box(-np.inf, np.inf, shape=(26,), dtype=np.float32)
         self._target = np.zeros(3)
         self._close_dir = np.array([0.0, 1.0, 0.0])
         self._q_target = REST_Q.copy()
@@ -167,6 +167,7 @@ class SO101LiftEnv(gym.Env):
         self._prev_action = np.zeros(4)
         self._pending = []
         self._steps = 0
+        self._cube0 = rb.body_pos(CUBE)[:2].copy()
         self.info = EpisodeInfo(dr=dr)
         return self._obs(), {}
 
@@ -216,17 +217,23 @@ class SO101LiftEnv(gym.Env):
         ee = rb.ee_pos()
         c = rb.body_pos(CUBE)
         # grasp point: the fixed pad should sit just outside the cube face on the -close side
-        grasp_site = c - self._close_dir * (CUBE_SIZE / 2 + PAD_FACE_OFFSET + 0.002)
+        grasp_site = c - self._close_dir * (CUBE_SIZE / 2 + PAD_FACE_OFFSET + GRASP_CLEARANCE / 2)
         grasp_site[2] = c[2] + GRASP_HEIGHT_OFFSET
         dist = float(np.linalg.norm(ee - grasp_site))
         grasped = self._cube_between_pads() and rb.gripper_opening() < 0.6
         lift = float(np.clip((c[2] - CUBE_SIZE / 2) / LIFT_SUCCESS, 0, 1.5))
-        r_reach = 1.0 - np.tanh(10.0 * dist)
+        # reach: a linear term keeps a constant gradient far from the cube (tanh alone is flat
+        # there, which let an early policy settle at the workspace boundary), plus a sharp
+        # bonus near the grasp site
+        r_reach = -4.0 * dist + (1.0 - np.tanh(10.0 * dist))
         r_grasp = 1.0 if grasped else 0.0
         r_lift = 2.0 * lift if grasped else 0.0
         r_success = 5.0 if (grasped and c[2] > LIFT_SUCCESS) else 0.0
-        # gentle penalties: closing far from the cube, leaving the cube knocked over the table
+        # penalties: closing far from the cube; shoving the cube around instead of grasping it
+        # (an early policy learned to drag the cube into a workspace corner)
         r_pen = -0.1 if (rb.gripper_opening() < 0.6 and dist > 0.03 and not grasped) else 0.0
+        if not grasped:
+            r_pen -= 3.0 * float(min(np.linalg.norm(c[:2] - self._cube0), 0.1))
         reward = r_reach + r_grasp + r_lift + r_success + r_pen
         self.info.grasped = self.info.grasped or grasped
         return reward, {"dist": dist, "grasped": grasped, "lift": lift, "r_reach": r_reach, "r_lift": r_lift}
@@ -239,6 +246,7 @@ class SO101LiftEnv(gym.Env):
         cz_vel = rb.data.body(CUBE).cvel[5] if hasattr(rb.data.body(CUBE), "cvel") else 0.0
         obs = np.concatenate([
             q[:5], qd[:5] * 0.1, [rb.gripper_opening()], ee, c, c - ee, [float(cz_vel)], self._prev_action[[2, 3]],
+            self._target - ee,  # where the commanded target sits relative to the fingertip
         ]).astype(np.float32)
         if self.dr.enabled and self.dr.obs_noise > 0:
             obs[11:20] += self.rng.normal(0, self.dr.obs_noise, 9).astype(np.float32)

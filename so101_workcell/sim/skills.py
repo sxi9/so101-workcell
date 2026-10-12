@@ -32,7 +32,7 @@ SUBSTEPS = int(round(1.0 / (CONTROL_HZ * 0.002)))
 #   fixed pad inner face sits 0.9 mm along +close axis from the site
 #   both pads span roughly -8..+10 mm along the finger axis (positive = toward the fingertips)
 PAD_FACE_OFFSET = 0.0009
-GRASP_CLEARANCE = 0.004  # gap between the fixed pad and the cube face before closing
+GRASP_CLEARANCE = 0.008  # gap between the fixed pad and the cube face before closing (tolerates ~6 mm tracking error)
 GRASP_HEIGHT_OFFSET = 0.003  # site height above the cube centre so the pads straddle the centre
 
 
