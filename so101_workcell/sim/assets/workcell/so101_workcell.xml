@@ -6,7 +6,7 @@
   <default>
     <default class="pad">
       <geom group="3" contype="1" conaffinity="1" condim="4" friction="1.5 0.02 0.001"
-            solref="0.004 1" solimp="0.95 0.99 0.001" rgba="0.1 0.1 0.1 1"/>
+            solref="0.01 1" solimp="0.95 0.99 0.001" rgba="0.1 0.1 0.1 1"/>
     </default>
     <default class="so101_new_calib">
       <joint damping="1" frictionloss="0.1" armature="0.005"/>

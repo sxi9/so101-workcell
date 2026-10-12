@@ -68,7 +68,7 @@ def main() -> int:
         tau=0.005,
         gamma=0.98,
         train_freq=1,
-        gradient_steps=1,
+        gradient_steps=-1,  # one gradient step per collected transition, whatever n_envs is
         ent_coef="auto",
         policy_kwargs={"net_arch": [256, 256]},
         tensorboard_log="runs",

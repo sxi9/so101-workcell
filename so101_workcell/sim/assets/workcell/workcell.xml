@@ -25,7 +25,7 @@
   <default>
     <default class="cube">
       <geom type="box" size="0.0125 0.0125 0.0125" mass="0.02" condim="4" friction="1.2 0.02 0.001"
-            solref="0.004 1" solimp="0.95 0.99 0.001" group="1"/>
+            solref="0.01 1" solimp="0.95 0.99 0.001" group="1"/>
     </default>
     <default class="bin">
       <geom type="box" condim="3" friction="0.8 0.01 0.001" group="1"/>

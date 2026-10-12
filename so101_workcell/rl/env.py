@@ -45,7 +45,7 @@ class DRConfig:
     mass_range: tuple[float, float] = (0.6, 1.6)  # scale
     size_range: tuple[float, float] = (0.9, 1.1)  # scale of the cube half-size
     friction_range: tuple[float, float] = (0.6, 1.4)  # scale, pads and cube
-    gain_range: tuple[float, float] = (0.7, 1.3)  # actuator kp scale
+    gain_range: tuple[float, float] = (0.8, 1.2)  # actuator kp scale
     gravity_range: tuple[float, float] = (-10.3, -9.3)
     latency_steps: tuple[int, int] = (0, 1)
     action_noise: float = 0.05
@@ -150,10 +150,20 @@ class SO101LiftEnv(gym.Env):
         rb.step(25)
         self._q_target = rb.q[:5].copy()
         self._target = rb.ee_pos()
-        # closing axis: tangential to the arm's radial direction at the cube
+        # Closing axis (fixed pad -> moving pad): tangential to the arm's radial direction at
+        # the cube, with the sign the arm can actually reach from its start posture. The IK
+        # then holds this signed axis for the whole episode so the grasp-site offset used by
+        # the reward matches where the fixed pad really is.
         c = rb.body_pos(CUBE)
         radial = np.array([c[0], c[1], 0.0]) / max(np.linalg.norm(c[:2]), 1e-6)
-        self._close_dir = np.array([-radial[1], radial[0], 0.0])
+        tang = np.array([-radial[1], radial[0], 0.0])
+        actual = rb.ee_rot()[:, 2].copy()
+        actual[2] = 0.0
+        self._close_dir = tang if actual @ tang >= 0 else -tang
+        ik = solve_ik(rb, self._target, (0, 0, -1), self._close_dir, q_init=self._q_target, q_rest=REST_Q, close_dir_signed=True)
+        self._q_target = ik.q
+        rb.set_ctrl(self._q_target)
+        rb.step(25)
         self._prev_action = np.zeros(4)
         self._pending = []
         self._steps = 0
@@ -169,7 +179,7 @@ class SO101LiftEnv(gym.Env):
         act = self._pending.pop(0) if len(self._pending) > self._latency else np.zeros(4)
         rb = self.robot
         self._target = np.clip(self._target + act[:3] * ACTION_SCALE, WORKSPACE_LO, WORKSPACE_HI)
-        ik = solve_ik(rb, self._target, (0, 0, -1), self._close_dir, q_init=self._q_target, q_rest=REST_Q, max_iters=30, close_dir_signed=False)
+        ik = solve_ik(rb, self._target, (0, 0, -1), self._close_dir, q_init=self._q_target, q_rest=REST_Q, max_iters=30, close_dir_signed=True)
         self._q_target = ik.q
         rb.set_ctrl(self._q_target)
         rb.set_gripper(0.5 - 0.5 * act[3])  # +1 -> closed
