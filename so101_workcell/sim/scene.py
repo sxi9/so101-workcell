@@ -15,8 +15,8 @@ BIN_HALF = 0.045
 # Region in front of the arm where cubes spawn (world frame, metres). Fingers-down grasps are
 # reachable out to a radius of ~0.27 m at table height (see scripts/measure_geometry.py).
 SPAWN_X = (0.13, 0.25)
-SPAWN_Y = (-0.09, 0.09)
-MIN_CUBE_GAP = 0.05
+SPAWN_Y = (-0.08, 0.08)
+MIN_CUBE_GAP = 0.06
 
 
 @dataclass
@@ -48,6 +48,22 @@ def randomize_cubes(robot: SO101, rng: np.random.Generator | None = None, *, yaw
     # settle contacts
     robot.step(50)
     return SceneState.read(robot)
+
+
+def clearance(robot: SO101, point_xy: np.ndarray, *, exclude: str | None = None) -> float:
+    """Distance from a table-plane point to the nearest obstacle surface (cubes, bin walls)."""
+    best = np.inf
+    for n in CUBE_NAMES:
+        if n == exclude:
+            continue
+        best = min(best, np.linalg.norm(point_xy - robot.body_pos(n)[:2]) - CUBE_SIZE * 0.75)
+    for n in BIN_NAMES:
+        d = np.abs(point_xy - robot.body_pos(n)[:2]) - (BIN_HALF + 0.004)
+        if np.all(d < 0):
+            best = min(best, 0.0)  # inside the bin footprint
+        else:
+            best = min(best, float(np.linalg.norm(np.maximum(d, 0))))
+    return float(best)
 
 
 def cube_yaw(robot: SO101, name: str) -> float:

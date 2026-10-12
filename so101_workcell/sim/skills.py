@@ -13,7 +13,7 @@ import numpy as np
 
 from .ik import solve_ik
 from .robot import SO101
-from .scene import CUBE_SIZE, cube_yaw, in_bin, is_lifted
+from .scene import CUBE_SIZE, clearance, cube_yaw, in_bin, is_lifted
 
 FrameHook = Callable[[SO101], None]  # called every control tick (for video recording)
 
@@ -81,7 +81,7 @@ class Skills:
         err = float(np.max(np.abs(self.robot.q[:5] - q_goal)))
         return SkillResult("move_joints", err < tol * 2, f"joint err {err:.3f}", {"err": err})
 
-    def plan_to(self, pos, *, close_dir=None, max_tilt: float = 45.0):
+    def plan_to(self, pos, *, close_dir=None, max_tilt: float = 45.0, signed: bool = True):
         """IK with tilt fallbacks. Returns (IKResult, tilt_deg) for the first reachable tilt."""
         pos = np.asarray(pos, float)
         radial = np.array([pos[0], pos[1], 0.0])
@@ -92,16 +92,16 @@ class Skills:
                 break
             t = np.radians(tilt)
             fdir = radial * np.sin(t) + np.array([0, 0, -np.cos(t)])
-            ik = solve_ik(self.robot, pos, fdir, close_dir, q_init=self._q_target, q_rest=REST_Q)
+            ik = solve_ik(self.robot, pos, fdir, close_dir, q_init=self._q_target, q_rest=REST_Q, close_dir_signed=signed)
             if ik.ok:
                 return ik, tilt
             if best is None or ik.pos_err < best[0].pos_err:
                 best = (ik, tilt)
         return best
 
-    def move_to(self, pos, *, close_dir=None, duration: float = 1.0, max_tilt: float = 45.0) -> SkillResult:
+    def move_to(self, pos, *, close_dir=None, duration: float = 1.0, max_tilt: float = 45.0, signed: bool = True) -> SkillResult:
         """Move the fingertip site to a world position, fingers down (tilting if needed)."""
-        ik, tilt = self.plan_to(pos, close_dir=close_dir, max_tilt=max_tilt)
+        ik, tilt = self.plan_to(pos, close_dir=close_dir, max_tilt=max_tilt, signed=signed)
         if not ik.ok:
             return SkillResult("move_to", False, f"IK failed: pos {ik.pos_err*1000:.1f} mm, ori {ik.ori_err:.2f}", {"ik": ik})
         res = self.move_joints(ik.q, duration=duration)
@@ -110,7 +110,7 @@ class Skills:
         ok = res.ok and err < 0.012
         return SkillResult("move_to", ok, f"ee err {err*1000:.1f} mm, tilt {tilt:.0f}", {"ee_err": err, "ik": ik, "tilt": tilt})
 
-    def move_linear(self, pos, *, close_dir=None, duration: float = 0.8, max_tilt: float = 15.0, step_m: float = 0.01) -> SkillResult:
+    def move_linear(self, pos, *, close_dir=None, duration: float = 0.8, max_tilt: float = 15.0, step_m: float = 0.01, signed: bool = True) -> SkillResult:
         """Straight-line Cartesian move: IK on evenly spaced waypoints so the fingertips do not
         swing sideways on the way down (a joint-space interpolation does not stay vertical)."""
         pos = np.asarray(pos, float)
@@ -120,7 +120,7 @@ class Skills:
         seg_t = max(duration / n, 1.0 / CONTROL_HZ)
         for i in range(1, n + 1):
             wp = start + (pos - start) * (i / n)
-            ik, _tilt = self.plan_to(wp, close_dir=close_dir, max_tilt=max_tilt)
+            ik, _tilt = self.plan_to(wp, close_dir=close_dir, max_tilt=max_tilt, signed=signed)
             if not ik.ok:
                 return SkillResult("move_linear", False, f"IK failed at waypoint {i}/{n}: pos {ik.pos_err*1000:.1f} mm", {"ik": ik})
             self.move_joints(ik.q, duration=seg_t, tol=0.05)
@@ -140,30 +140,36 @@ class Skills:
         return self.move_joints(HOME_Q, duration=1.2)
 
     # ---- grasp geometry ----------------------------------------------------------------
-    def _grasp_frame(self, cube: str) -> tuple[np.ndarray, np.ndarray]:
-        """Return (close_dir, site_target) for a top-down grasp of the cube.
+    # The open moving jaw sweeps through this region (site frame: along +close, metres) at
+    # roughly table height while closing, so it must be free of cubes and bin walls.
+    JAW_SWEEP = (0.03, 0.05, 0.07, 0.09)
 
-        The gripperframe site sits at the fixed jaw; the moving jaw closes toward +site z.
-        So the site goes half a cube width away from the cube centre along -close_dir, at a
-        height where the fingertips reach just below the cube's mid-plane.
+    def _grasp_candidates(self, cube: str) -> list[tuple[np.ndarray, float]]:
+        """Candidate closing directions for a top-down grasp, best first.
+
+        close_dir points from the fixed jaw to the moving jaw. Candidates are the four
+        horizontal face normals of the cube; they are ranked by the clearance of the moving
+        jaw's sweep from other objects, with a small preference for a tangential direction
+        (which keeps wrist_roll small on this arm).
         """
         c = self.robot.body_pos(cube)
         yaw = cube_yaw(self.robot, cube)
-        # close across the cube face: choose the horizontal direction nearest the arm's
-        # radial direction so wrist_roll stays small.
         radial = np.array([c[0], c[1], 0.0])
         radial /= max(np.linalg.norm(radial), 1e-6)
         tangential = np.array([-radial[1], radial[0], 0.0])
-        # cube faces are at yaw and yaw+90deg; closing axis perpendicular to a face
-        candidates = []
-        for a in (yaw, yaw + np.pi / 2):
+        scored = []
+        for a in (yaw, yaw + np.pi / 2, yaw + np.pi, yaw + 3 * np.pi / 2):
             d = np.array([np.cos(a), np.sin(a), 0.0])
-            candidates.append(d)
-        # prefer closing along the tangential direction (wrist roll ~0 for this arm)
-        close_dir = max(candidates, key=lambda d: abs(d @ tangential))
-        if close_dir @ tangential < 0:
-            close_dir = -close_dir
-        return close_dir, c
+            clear = min(clearance(self.robot, c[:2] + d[:2] * s, exclude=cube) for s in self.JAW_SWEEP)
+            # the fixed jaw sits just outside the opposite face; it must not land on a wall
+            clear = min(clear, clearance(self.robot, c[:2] - d[:2] * 0.024, exclude=cube) + 0.02)
+            score = min(clear, 0.04) + 0.01 * abs(d @ tangential)
+            scored.append((d, score))
+        scored.sort(key=lambda t: -t[1])
+        return scored
+
+    def _grasp_frame(self, cube: str) -> tuple[np.ndarray, np.ndarray]:
+        return self._grasp_candidates(cube)[0][0], self.robot.body_pos(cube)
 
     def _actual_close_dir(self) -> np.ndarray:
         """Horizontal projection of the site z-axis: fixed pad -> moving pad."""
@@ -179,11 +185,22 @@ class Skills:
     # ---- composite skills --------------------------------------------------------------
     def pick(self, cube: str, *, hover: float = 0.045) -> SkillResult:
         """Top-down grasp of a cube. Verifies the cube is lifted at the end."""
-        close_dir, c = self._grasp_frame(cube)
+        c = self.robot.body_pos(cube)
         z_grasp = c[2] + GRASP_HEIGHT_OFFSET
         self.robot.set_gripper(1.0)
-        # 1. hover above (grasps stay near vertical: at most a small tilt)
-        r = self.move_to(self._site_for_cube_center(c, close_dir, z_grasp + hover), close_dir=close_dir, duration=1.0, max_tilt=15)
+        # 1. hover above (grasps stay near vertical: at most a small tilt). Try the closing
+        #    directions best-first; a direction can be unreachable for wrist_roll.
+        r = None
+        for close_dir, _score in self._grasp_candidates(cube):
+            hover_pos = self._site_for_cube_center(c, close_dir, z_grasp + hover)
+            ik, _tilt = self.plan_to(hover_pos, close_dir=close_dir, max_tilt=15)
+            if not ik.ok:
+                continue
+            r = self.move_to(hover_pos, close_dir=close_dir, duration=1.0, max_tilt=15)
+            if r:
+                break
+        if r is None:
+            return SkillResult("pick", False, "hover: no reachable grasp direction")
         if not r:
             return SkillResult("pick", False, "hover: " + r.reason, r.info)
         # The IK treats the closing axis as sign-free, so read back the achieved site z-axis
@@ -215,9 +232,12 @@ class Skills:
         close_dir = self._actual_close_dir()
         target_hi = np.array([b[0], b[1], 0.03 + hover])
         target_lo = np.array([b[0], b[1], 0.055])
-        r = self.move_to(target_hi, close_dir=close_dir, duration=1.4)
+        # The cube is held between the pads, so the closing axis is unconstrained during
+        # transport; that keeps wrist_roll inside its range over the bins.
+        r = self.move_to(target_hi, close_dir=None, duration=1.4)
         if not r:
             return SkillResult("place", False, "transport: " + r.reason, r.info)
+        close_dir = self._actual_close_dir()
         r = self.move_linear(target_lo, close_dir=close_dir, duration=0.8, max_tilt=45)
         if not r:
             return SkillResult("place", False, "lower: " + r.reason, r.info)

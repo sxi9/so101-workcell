@@ -56,6 +56,12 @@ def main() -> None:
         xml,
         count=1,
     )
+    # Finger meshes collide as convex hulls, which are much fatter than the real jaws and hit
+    # the object before the pads do. Make every mesh collision geom from the gripper body
+    # onward visual-only; the pads are the only contact surfaces on the fingers.
+    head, tail = xml.split('<body name="gripper"', 1)
+    tail = tail.replace('class="collision"', 'class="collision" contype="0" conaffinity="0"')
+    xml = head + '<body name="gripper"' + tail
     assert "pad_fixed" in xml and "pad_moving" in xml and 'name="wrist"' in xml
     DST.parent.mkdir(parents=True, exist_ok=True)
     DST.write_text(xml)

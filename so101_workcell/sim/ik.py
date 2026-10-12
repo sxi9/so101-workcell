@@ -21,9 +21,11 @@ class IKResult:
     ori_err: float
     iters: int
 
+    close_err: float = 0.0
+
     @property
     def ok(self) -> bool:
-        return self.pos_err < 4e-3 and self.ori_err < 0.15
+        return self.pos_err < 4e-3 and self.ori_err < 0.15 and self.close_err < 0.25
 
 
 def _rotvec_between(a: np.ndarray, b: np.ndarray) -> np.ndarray:
@@ -44,12 +46,15 @@ def solve_ik(
     w_close: float = 0.5,
     q_rest=None,
     w_rest: float = 0.1,
+    close_dir_signed: bool = True,
 ) -> IKResult:
     """Solve for the 5 arm joints that put the fingertip site at target_pos.
 
     finger_dir: desired world direction of the site x-axis (where the fingers point).
-    close_dir:  optional desired world direction of the site z-axis (the closing axis).
-                Sign is ignored because a parallel grasp is symmetric.
+    close_dir:  optional desired world direction of the site z-axis, which points from the
+                fixed jaw toward the moving jaw. With close_dir_signed=False either sign is
+                accepted (symmetric grasp); the default honours the sign so the caller can
+                keep the moving jaw's sweep away from obstacles.
     """
     m = robot.model
     d = robot.scratch_data()
@@ -70,6 +75,7 @@ def solve_ik(
     jacp = np.zeros((3, m.nv))
     jacr = np.zeros((3, m.nv))
     pos_err = ori_err = np.inf
+    close_err = 0.0
     it = 0
     for it in range(max_iters):
         d.qpos[robot.qpos_idx[:5]] = q
@@ -83,12 +89,13 @@ def solve_ik(
         weights = [1.0, 1.0]
         if cdir is not None:
             cz = R[:, 2]
-            c = cdir if cz @ cdir >= 0 else -cdir
+            c = cdir if (close_dir_signed or cz @ cdir >= 0) else -cdir
             rows.append(_rotvec_between(cz, c))
             weights.append(w_close)
         pos_err = float(np.linalg.norm(e_pos))
         ori_err = float(np.linalg.norm(e_f))
-        if pos_err < 1e-4 and ori_err < 1e-3:
+        close_err = float(np.linalg.norm(rows[2])) if len(rows) > 2 else 0.0
+        if pos_err < 1e-4 and ori_err < 1e-3 and close_err < 1e-2:
             break
         mujoco.mj_jacSite(m, d, jacp, jacr, robot.site_id)
         J = np.vstack([jacp[:, dof]] + [jacr[:, dof]] * (len(rows) - 1))
@@ -102,4 +109,4 @@ def solve_ik(
         N = np.eye(len(q)) - J_pinv @ Jw
         dq += N @ (w_rest * (q_rest - q))
         q = np.clip(q + step * dq, lo, hi)
-    return IKResult(q=q, pos_err=pos_err, ori_err=ori_err, iters=it + 1)
+    return IKResult(q=q, pos_err=pos_err, ori_err=ori_err, iters=it + 1, close_err=close_err)
