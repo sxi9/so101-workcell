@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+outputs/
+runs/
+*.mp4
+*.gif
+!docs/*.gif
+*.onnx
+*.zip
+.env
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+wandb/
