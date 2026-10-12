@@ -51,6 +51,10 @@ Success rose from 0% to 68% between 96k and 112k steps and reached 98% by 144k. 
 oracle acting through the same 4-D action interface manages 8/10 nominal and 7/10 randomised
 episodes, so the learned policy beats the hand-written controller.
 
+A 60k-step fine-tune of this policy *under* randomisation (`--init`) did not help: 94% nominal / 78%
+randomised after fine-tuning, versus 98% / 90% zero-shot. The restarted replay buffer and the noisier
+training signal cost more than the extra robustness bought, so the shipped policy is the nominal one.
+
 Two earlier runs failed and taught something: a policy that learned to drag the cube into a
 workspace corner (fixed with a linear reach term and a displacement penalty), and a randomised
 run whose critic diverged after one physics blow-up produced a return of -2493 (fixed with an
@@ -81,7 +85,7 @@ python scripts/eval_scripted.py --episodes 30
 # RL: train on nominal physics, fine-tune under randomisation, evaluate, render
 python scripts/train_rl.py --steps 150000 --run lift_sac_nodr --n-envs 1 --no-dr
 python scripts/train_rl.py --steps 60000 --run lift_sac_dr_ft --init runs/lift_sac_nodr/final.zip
-python scripts/eval_rl.py --model runs/lift_sac_nodr/final.zip --episodes 50 --video outputs/rl_lift.mp4
+python scripts/eval_rl.py --model models/lift_sac_nominal.zip --episodes 50 --video outputs/rl_lift.mp4   # shipped policy
 
 # stream a planned episode to a Cyberwave SO-101 twin (free Playground; needs CYBERWAVE_API_KEY)
 python scripts/replay_to_cyberwave.py --backend playground

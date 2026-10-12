@@ -1,0 +1,16 @@
+{
+  "nominal": {
+    "episodes": 50,
+    "dr": false,
+    "success_rate": 0.94,
+    "grasp_rate": 0.94,
+    "mean_max_cube_z": 0.19292197116641674
+  },
+  "randomized": {
+    "episodes": 50,
+    "dr": true,
+    "success_rate": 0.78,
+    "grasp_rate": 0.82,
+    "mean_max_cube_z": 0.16342999474994307
+  }
+}
