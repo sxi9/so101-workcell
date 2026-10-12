@@ -1,0 +1,7 @@
+{
+  "steps": 150000,
+  "n_envs": 1,
+  "dr": false,
+  "wall_s": 2931.2524020671844,
+  "device": "cuda"
+}
