@@ -35,6 +35,7 @@ SUBSTEPS = int(round(CONTROL_DT / 0.002))
 ACTION_SCALE = np.array([0.02, 0.02, 0.02])  # metres per step at |a| = 1
 LIFT_SUCCESS = 0.06
 MAX_STEPS = 100
+REWARD_CLIP = 12.0  # per-step bound; the success step is worth ~10
 WORKSPACE_LO = np.array([0.10, -0.14, 0.012])
 WORKSPACE_HI = np.array([0.28, 0.14, 0.10])  # fingers-down poses above ~10 cm are out of reach
 
@@ -58,6 +59,7 @@ class EpisodeInfo:
     success: bool = False
     grasped: bool = False
     max_cube_z: float = 0.0
+    unstable: bool = False
     dr: dict = field(default_factory=dict)
 
 
@@ -187,16 +189,27 @@ class SO101LiftEnv(gym.Env):
         rb.step(SUBSTEPS)
         self._steps += 1
         self._prev_action = act
+        # Guard against simulator blow-ups (possible under aggressive randomization): a
+        # non-finite state or a cube that left the table ends the episode with a bounded
+        # penalty instead of feeding the critic an unbounded return.
+        c = rb.body_pos(CUBE)
+        unstable = (not np.all(np.isfinite(rb.data.qpos))) or (not np.all(np.isfinite(rb.data.qvel))) or np.linalg.norm(c) > 1.0 or c[2] < -0.05
+        if unstable:
+            self.info.unstable = True
+            obs = np.zeros(self.observation_space.shape, dtype=np.float32)
+            info = {"success": False, "is_success": self.info.success, "unstable": True, "dist": 1.0, "grasped": False, "lift": 0.0}
+            return obs, -REWARD_CLIP, True, False, info
         obs = self._obs()
         reward, terms = self._reward()
-        cube_z = rb.body_pos(CUBE)[2]
+        reward = float(np.clip(reward, -REWARD_CLIP, REWARD_CLIP))
+        cube_z = c[2]
         self.info.max_cube_z = max(self.info.max_cube_z, float(cube_z))
         success = cube_z > LIFT_SUCCESS and terms["grasped"]
         self.info.success = self.info.success or success
         terminated = False
         truncated = self._steps >= MAX_STEPS
-        info = {"success": success, "is_success": self.info.success, **terms}
-        return obs, float(reward), terminated, truncated, info
+        info = {"success": success, "is_success": self.info.success, "unstable": False, **terms}
+        return obs, reward, terminated, truncated, info
 
     # ---- helpers -----------------------------------------------------------------------
     def _cube_between_pads(self) -> bool:
@@ -219,7 +232,7 @@ class SO101LiftEnv(gym.Env):
         # grasp point: the fixed pad should sit just outside the cube face on the -close side
         grasp_site = c - self._close_dir * (CUBE_SIZE / 2 + PAD_FACE_OFFSET + GRASP_CLEARANCE / 2)
         grasp_site[2] = c[2] + GRASP_HEIGHT_OFFSET
-        dist = float(np.linalg.norm(ee - grasp_site))
+        dist = float(min(np.linalg.norm(ee - grasp_site), 0.5))
         grasped = self._cube_between_pads() and rb.gripper_opening() < 0.6
         lift = float(np.clip((c[2] - CUBE_SIZE / 2) / LIFT_SUCCESS, 0, 1.5))
         # reach: a linear term keeps a constant gradient far from the cube (tanh alone is flat
@@ -250,7 +263,7 @@ class SO101LiftEnv(gym.Env):
         ]).astype(np.float32)
         if self.dr.enabled and self.dr.obs_noise > 0:
             obs[11:20] += self.rng.normal(0, self.dr.obs_noise, 9).astype(np.float32)
-        return obs
+        return np.clip(obs, -5.0, 5.0)
 
     def render(self):
         return self.robot.render(self.camera)

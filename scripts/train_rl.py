@@ -47,6 +47,7 @@ def main() -> int:
     ap.add_argument("--n-envs", type=int, default=4)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--no-dr", action="store_true")
+    ap.add_argument("--init", default=None, help="warm-start actor/critic from a saved SAC .zip (e.g. a nominal-physics policy)")
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     args = ap.parse_args()
 
@@ -58,9 +59,7 @@ def main() -> int:
 
     env = SubprocVecEnv([factory(i) for i in range(args.n_envs)]) if args.n_envs > 1 else DummyVecEnv([factory(0)])
 
-    model = SAC(
-        "MlpPolicy",
-        env,
+    sac_kwargs = dict(
         learning_rate=3e-4,
         buffer_size=400_000,
         learning_starts=5_000,
@@ -76,6 +75,14 @@ def main() -> int:
         seed=args.seed,
         verbose=0,
     )
+    if args.init:
+        # keep the pretrained networks, start a fresh replay buffer on the new env
+        model = SAC.load(args.init, env=env, device=args.device, custom_objects={"learning_rate": sac_kwargs["learning_rate"]})
+        model.learning_starts = sac_kwargs["learning_starts"]
+        model.tensorboard_log = "runs"
+        print("warm-started from", args.init)
+    else:
+        model = SAC("MlpPolicy", env, **sac_kwargs)
     t0 = time.time()
     model.learn(
         total_timesteps=args.steps,
@@ -84,7 +91,7 @@ def main() -> int:
         progress_bar=False,
     )
     model.save(run_dir / "final")
-    meta = {"steps": args.steps, "n_envs": args.n_envs, "dr": not args.no_dr, "wall_s": time.time() - t0, "device": args.device}
+    meta = {"steps": args.steps, "n_envs": args.n_envs, "dr": not args.no_dr, "init": args.init, "wall_s": time.time() - t0, "device": args.device}
     (run_dir / "train_meta.json").write_text(json.dumps(meta, indent=2))
     print("saved", run_dir / "final.zip", json.dumps(meta))
     return 0
